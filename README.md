@@ -8,7 +8,7 @@ The project was created as part of the [Insight Data Science Fellows Program](ht
 2. [Data](README.md#2-Data)
 3. [Method](README.md#3-Method)
 4. [App](README.md#4-App)
-5. [Reference]((README.md#5-Reference)
+5. [Reference](README.md#5-Reference)
 
 ## 1. Introduction
 The motivation of the App [UKLYPA](www.uklypa.com) is that the political views of the public could be geographically influenced. For politicians or political activists in UK, an App which can locate their policy audiences from 650 parliamentary regions could help them to optimize their Ad campaigns to gain more supporters.
