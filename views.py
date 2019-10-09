@@ -19,6 +19,8 @@ from textblob import TextBlob,Word
 import pickle
 import random 
 import time
+import os
+import json
 
 Bootstrap(app)
 
@@ -52,37 +54,37 @@ def analyse():
 					end = time.time()
 					final_time = end-start
 	
-        # Part 2. load in trained model and prediction
+                # Part 2. topic modeling
 		
-		## model part
-		PIK = "/Users/purod/Desktop/Insight/finalized_model.pkl"
+		# 2.1. Load in trained LDA model
+		PIK = "/home/ubuntu/Insight_project/UKLYPA/Trained_model.pkl"
 		with open(PIK, "rb") as f:
 			FM=pickle.load(f)
-		FM['model'].mallet_path='/Users/purod/Desktop/Insight/Script/mallet-2.0.8/bin/mallet'
-
+		FM['model'].mallet_path='/home/ubuntu/Insight_project/UKLYPA/mallet-2.0.8/bin/mallet'
 		text = rawtext
-        # Remove new line characters
+                # 2.2. Preprocesssing
+                # Remove new line characters
 		user_data = re.sub(r'\s+', ' ', text)
-        # Remove both www and http
+                # Remove both www and http
 		user_data = re.sub('www', '', user_data)
 		user_data = re.sub('http', '', user_data)
 		user_data = re.sub('html', '', user_data)
 		user_data = re.sub('org', '', user_data)
-        # Remove distracting single quotes
+                # Remove distracting single quotes
 		user_data = re.sub(r"\'", "", user_data)
 
-        # tokenization
+                # tokenization
 		user_words = gensim.utils.simple_preprocess(str(user_data), deacc=True)
 		
 		# define stop words
 		stop_words = stopwords.words('english')
 		stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 
-        # remove stop words
+                # remove stop words
 		user_nostops = [word for word in simple_preprocess(str(user_words)) if word not in stop_words]
 		user_bigram = [FM['bigram_mod'][user_nostops]]
 		nlp = spacy.load('en', disable=['parser', 'ner'])
-        # lemmatization
+                # lemmatization
 		def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
 			"""https://spacy.io/api/annotation"""
 			texts_out = []
@@ -92,38 +94,37 @@ def analyse():
 			return texts_out
 		user_lemmatized = lemmatization(user_bigram, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 		
-        # Term Document Frequency
+                # Term Document Frequency
 		user_corpus = [FM['id2word'].doc2bow(text) for text in user_lemmatized]
 
-        # calculate the weight vector for a specific petition
+                # 2.3. calculate the weight vector for a specific petition
 		user_weight = np.array([i[1] for i in FM['model'][user_corpus][0]]).reshape(-1,1)
-
-		user_trans = np.power(user_weight,4)*10000
-		# sentiment
-		user_polarity = TextBlob(text).sentiment.polarity
+                # transform the topic vector
+		user_trans = np.power(user_weight,4)*1000
 		
-		if user_polarity>0.1:
+                # Part 3. Integrate topic weight, sentiment score and geographic information 
+		if blob_sentiment>0.1:
 			user_location = np.dot(FM['loc_topic_pos'].T,user_trans)
-		elif user_polarity<-0.1:
+		elif blob_sentiment<-0.1:
 			user_location = np.dot(FM['loc_topic_neg'].T,user_trans)
 		else:
 			user_location = np.dot(FM['loc_topic_neu'].T,user_trans)
-
+                # normalization to scale 0-10
 		user_norm= np.interp(user_location, (user_location.min(), user_location.max()), (0, 10))
-
+                # Part 4. Plot the map using user_norm
 		# add names of parliamentary constituents
-		IP='/Users/purod/Desktop/Insight/Insight_project/UKLYPA/PreTrain/uk_name.pkl'
+		IP='/home/ubuntu/Insight_project/UKLYPA/PreTrain/uk_name.pkl'
 		with open(IP, "rb") as f:
 			uk_list = pickle.load(f)
 		constituent_data = pd.DataFrame(data=user_norm, index=uk_list, columns=['Support Index'])
 		constituent_data['pcon17nm'] = constituent_data.index
 		constituent_data=constituent_data.reindex(columns=['pcon17nm','Support Index'])
 		# map in geojson format
-		state_map = '/Users/purod/Desktop/Insight/Insight_project/UKLYPA/static/geojson_file.json'
-		# chroploth map
+		state_map = '/home/ubuntu/Insight_project/UKLYPA/static/geojson_file.json'
+        	# chroploth map
 		m = folium.Map(location=[56, -2], zoom_start=5)
 
-		folium.Choropleth(
+		folium_temp = folium.Choropleth(
     		geo_data=state_map,
     		name='choropleth',
     		data=constituent_data,
@@ -134,22 +135,21 @@ def analyse():
     		line_opacity=0.2,
     		legend_name='Support Index'
 		).add_to(m)
-
+		# hover 
+		folium_temp.geojson.add_child(
+			folium.features.GeoJsonTooltip(['pcon17nm'],labels=False )
+		)
 		folium.LayerControl().add_to(m)
-		#unique_name = str(random.randint(1,100000))+'map.html'
-		#file_name = '/Users/purod/Desktop/Insight/Insight_project/UKLYPA/templates/'+unique_name
-		m.save('/Users/purod/Desktop/Insight/Insight_project/UKLYPA/templates/map1.html')
-		
+                # save the map
+		m.save('/home/ubuntu/Insight_project/UKLYPA/templates/map1.html')
 	return render_template('response.html',received_text = received_text2,number_of_tokens=number_of_tokens,blob_sentiment=blob_sentiment,blob_subjectivity=blob_subjectivity,summary=summary,final_time=final_time)
 
-#from flask import (Flask,send_file)
+# Load in petition map
 @app.route('/show_map')
 def show_map():
 	return render_template('map1.html')
+# load in default map
+@app.route('/def_map')
+def def_map():
+	return render_template('map.html')
 
-#@app.route('/def_map')
-#def def_map():
-#	return render_template('map.html')
-
-#if __name__ == '__main__':
-#    app.run(host='0.0.0.0', debug=True)
