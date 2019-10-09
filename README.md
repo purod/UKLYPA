@@ -6,7 +6,7 @@ The project was created as part of the [Insight Data Science Fellows Program](ht
 
 1. [Introduction](README.md#1-introduction)
  * 1.1 [Project Details](README.md#11-project-details)
-2. [The Pipeline](README.md#2-the-pipeline)
+2. [About the data](README.md#2-About the data)
  * 2.0 [Avro Schema](README.md#20-avro-schema)
  * 2.1 [Kafka Ingestion](README.md#21-kafka-ingestion)
  * 2.2 [Kafka Streams Application](README.md#22-kafka-streams-application)
@@ -17,7 +17,7 @@ The motivation of the App is that the political views of the public could be geo
 activists in UK, an App which can locate their policy audiences from 650 parliamentary regions could help them to optimize their Ad 
 campaigns to gain more supporters.
 
-# About the data
+## 2. About the data
 **Training dataset:** Using UK petition platform, people from differet regions in UK can directly express their political views by simply signing petitions they support. Since 2015, the platform has collected 18,732 petitions and 62,455,828 signatures in total. The data could be downloaded for each petition as a json file, which also contains the corresponding geographic distribution of signatures across 650 parliamentary regions in UK.
 
 **Test dataset:**  To test whether or not our trained topic model can accurately assign a new petition into the correct topic, 7K petitions from the US petition platform 'we the people' were downloaded from a [github project](https://github.com/shivashankarrs/Petitions). Petitions in this file have been manually labelled by the people who submitted their petitions. Petitions from four topics which are similar as mine were used as the test dataset.
