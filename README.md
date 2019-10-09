@@ -6,7 +6,7 @@ The project was created as part of the [Insight Data Science Fellows Program](ht
 
 1. [Introduction](README.md#1-introduction)
  * 1.1 [Project Details](README.md#11-project-details)
-2. [About the data](README.md#2-About-the-data)
+2. [Data](README.md#2-About-the-data)
  * 2.0 [Avro Schema](README.md#20-avro-schema)
  * 2.1 [Kafka Ingestion](README.md#21-kafka-ingestion)
  * 2.2 [Kafka Streams Application](README.md#22-kafka-streams-application)
